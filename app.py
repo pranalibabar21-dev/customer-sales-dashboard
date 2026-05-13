@@ -7,323 +7,366 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
 
-# --------------------------------
-# Page Config
-# --------------------------------
+# ---------------------------------------------------
+# PAGE CONFIG
+# ---------------------------------------------------
 st.set_page_config(
     page_title="Customer Sales Dashboard",
     layout="wide"
 )
 
-# --------------------------------
-# Title
-# --------------------------------
-st.title("Customer Sales and Churn Analysis Dashboard")
+# ---------------------------------------------------
+# LOGIN SYSTEM
+# ---------------------------------------------------
+st.title("Customer Sales and Churn Analysis System")
 
-st.write("MCA Final Year Major Project")
+st.subheader("Login Page")
 
-# --------------------------------
-# Load Data
-# --------------------------------
-sales_data = pd.read_csv(
-    "sales_data.csv"
+# Dummy Users
+users = {
+    "admin": "admin123",
+    "user": "user123"
+}
+
+username = st.text_input("Enter Username")
+
+password = st.text_input(
+    "Enter Password",
+    type="password"
 )
 
-customer_data = pd.read_csv(
-    "customer_data.csv"
-)
-
-# --------------------------------
-# Convert Date Column
-# --------------------------------
-sales_data['Date'] = pd.to_datetime(
-    sales_data['Date']
-)
-
-# --------------------------------
-# Sidebar Filters
-# --------------------------------
-st.sidebar.header("Filter Options")
-
-# Region Filter
-selected_region = st.sidebar.selectbox(
-    "Select Region",
-    sales_data['Region'].unique()
-)
-
-# Product Filter
-selected_product = st.sidebar.selectbox(
-    "Select Product",
-    sales_data['Product'].unique()
-)
-
-# Date Filter
-start_date = st.sidebar.date_input(
-    "Start Date",
-    sales_data['Date'].min()
-)
-
-end_date = st.sidebar.date_input(
-    "End Date",
-    sales_data['Date'].max()
-)
-
-# --------------------------------
-# Filter Data
-# --------------------------------
-filtered_data = sales_data[
-    (sales_data['Region'] == selected_region) &
-    (sales_data['Product'] == selected_product) &
-    (sales_data['Date'] >= pd.to_datetime(start_date)) &
-    (sales_data['Date'] <= pd.to_datetime(end_date))
-]
-
-# --------------------------------
-# KPI Metrics
-# --------------------------------
-st.subheader("Dashboard Metrics")
-
-col1, col2, col3 = st.columns(3)
-
-total_sales = filtered_data['Total_Sales'].sum()
-
-total_customers = filtered_data[
-    'Customer_ID'
-].nunique()
-
-top_product = filtered_data.groupby(
-    'Product'
-)['Total_Sales'].sum().idxmax()
-
-with col1:
-    st.metric(
-        "Total Sales",
-        f"₹ {total_sales:,}"
-    )
-
-with col2:
-    st.metric(
-        "Total Customers",
-        total_customers
-    )
-
-with col3:
-    st.metric(
-        "Top Product",
-        top_product
-    )
-
-# --------------------------------
-# Show Dataset
-# --------------------------------
-st.subheader("Filtered Sales Dataset")
-
-st.dataframe(filtered_data)
-
-# --------------------------------
-# Product-wise Sales Chart
-# --------------------------------
-st.subheader("Product-wise Sales")
-
-product_sales = filtered_data.groupby(
-    'Product'
-)['Total_Sales'].sum()
-
-fig, ax = plt.subplots(figsize=(8,5))
+login_button = st.button("Login")
+
+# ---------------------------------------------------
+# LOGIN VALIDATION
+# ---------------------------------------------------
+if login_button:
+
+    if username in users and users[username] == password:
+
+        st.success(f"Welcome {username}")
+
+        # ---------------------------------------------------
+        # LOAD DATA
+        # ---------------------------------------------------
+        sales_data = pd.read_csv("sales_data.csv")
+
+        customer_data = pd.read_csv("customer_data.csv")
+
+        # ---------------------------------------------------
+        # DATE CONVERSION
+        # ---------------------------------------------------
+        sales_data['Date'] = pd.to_datetime(
+            sales_data['Date']
+        )
+
+        # ---------------------------------------------------
+        # SIDEBAR MENU
+        # ---------------------------------------------------
+        st.sidebar.title("Navigation")
+
+        menu = st.sidebar.radio(
+            "Go To",
+            [
+                "Dashboard",
+                "Sales Analysis",
+                "Prediction",
+                "Churn Analysis",
+                "Reports"
+            ]
+        )
+
+        # ---------------------------------------------------
+        # FILTERS
+        # ---------------------------------------------------
+        st.sidebar.header("Filter Options")
+
+        selected_region = st.sidebar.selectbox(
+            "Select Region",
+            sales_data['Region'].unique()
+        )
+
+        selected_product = st.sidebar.selectbox(
+            "Select Product",
+            sales_data['Product'].unique()
+        )
+
+        start_date = st.sidebar.date_input(
+            "Start Date",
+            sales_data['Date'].min()
+        )
+
+        end_date = st.sidebar.date_input(
+            "End Date",
+            sales_data['Date'].max()
+        )
+
+        # ---------------------------------------------------
+        # FILTER DATA
+        # ---------------------------------------------------
+        filtered_data = sales_data[
+            (sales_data['Region'] == selected_region) &
+            (sales_data['Product'] == selected_product) &
+            (sales_data['Date'] >= pd.to_datetime(start_date)) &
+            (sales_data['Date'] <= pd.to_datetime(end_date))
+        ]
+
+        # ---------------------------------------------------
+        # KPI METRICS
+        # ---------------------------------------------------
+        total_sales = filtered_data[
+            'Total_Sales'
+        ].sum()
+
+        total_customers = filtered_data[
+            'Customer_ID'
+        ].nunique()
+
+        top_product = filtered_data.groupby(
+            'Product'
+        )['Total_Sales'].sum().idxmax()
+
+        # ---------------------------------------------------
+        # DASHBOARD PAGE
+        # ---------------------------------------------------
+        if menu == "Dashboard":
+
+            st.header("Dashboard Overview")
+
+            col1, col2, col3 = st.columns(3)
+
+            with col1:
+                st.metric(
+                    "Total Sales",
+                    f"₹ {total_sales:,}"
+                )
 
-product_sales.plot(
-    kind='bar',
-    ax=ax
-)
+            with col2:
+                st.metric(
+                    "Total Customers",
+                    total_customers
+                )
 
-plt.xlabel("Product")
-plt.ylabel("Total Sales")
+            with col3:
+                st.metric(
+                    "Top Product",
+                    top_product
+                )
 
-st.pyplot(fig)
+            st.subheader("Filtered Dataset")
 
-# --------------------------------
-# Monthly Sales Trend
-# --------------------------------
-st.subheader("Monthly Sales Trend")
+            st.dataframe(filtered_data)
 
-sales_data['Month'] = sales_data[
-    'Date'
-].dt.month
+        # ---------------------------------------------------
+        # SALES ANALYSIS PAGE
+        # ---------------------------------------------------
+        elif menu == "Sales Analysis":
 
-monthly_sales = sales_data.groupby(
-    'Month'
-)['Total_Sales'].sum()
+            st.header("Sales Analysis")
 
-fig2, ax2 = plt.subplots(figsize=(8,5))
+            # Product-wise Sales
+            st.subheader("Product-wise Sales")
 
-ax2.plot(
-    monthly_sales.index,
-    monthly_sales.values,
-    marker='o'
-)
+            product_sales = filtered_data.groupby(
+                'Product'
+            )['Total_Sales'].sum()
 
-plt.xlabel("Month")
-plt.ylabel("Total Sales")
+            fig1, ax1 = plt.subplots(figsize=(8,5))
 
-st.pyplot(fig2)
+            product_sales.plot(
+                kind='bar',
+                ax=ax1
+            )
 
-# --------------------------------
-# Region-wise Sales Pie Chart
-# --------------------------------
-st.subheader("Region-wise Sales Distribution")
+            plt.xlabel("Product")
+            plt.ylabel("Total Sales")
 
-region_sales = sales_data.groupby(
-    'Region'
-)['Total_Sales'].sum()
+            st.pyplot(fig1)
 
-fig_pie, ax_pie = plt.subplots(figsize=(7,7))
+            # Monthly Sales Trend
+            st.subheader("Monthly Sales Trend")
 
-ax_pie.pie(
-    region_sales,
-    labels=region_sales.index,
-    autopct='%1.1f%%'
-)
+            sales_data['Month'] = sales_data[
+                'Date'
+            ].dt.month
 
-st.pyplot(fig_pie)
+            monthly_sales = sales_data.groupby(
+                'Month'
+            )['Total_Sales'].sum()
 
-# --------------------------------
-# Correlation Heatmap
-# --------------------------------
-st.subheader("Correlation Heatmap")
+            fig2, ax2 = plt.subplots(figsize=(8,5))
 
-numeric_columns = sales_data.select_dtypes(
-    include='number'
-)
+            ax2.plot(
+                monthly_sales.index,
+                monthly_sales.values,
+                marker='o'
+            )
 
-fig3, ax3 = plt.subplots(figsize=(8,5))
+            plt.xlabel("Month")
+            plt.ylabel("Total Sales")
 
-sns.heatmap(
-    numeric_columns.corr(),
-    annot=True,
-    cmap='coolwarm',
-    ax=ax3
-)
+            st.pyplot(fig2)
 
-st.pyplot(fig3)
+            # Region-wise Pie Chart
+            st.subheader("Region-wise Sales")
 
-# --------------------------------
-# Machine Learning Model
-# --------------------------------
-st.subheader("Sales Prediction Using Machine Learning")
+            region_sales = sales_data.groupby(
+                'Region'
+            )['Total_Sales'].sum()
 
-X = sales_data[['Quantity', 'Price']]
+            fig3, ax3 = plt.subplots(figsize=(7,7))
 
-y = sales_data['Total_Sales']
+            ax3.pie(
+                region_sales,
+                labels=region_sales.index,
+                autopct='%1.1f%%'
+            )
 
-X_train, X_test, y_train, y_test = train_test_split(
-    X,
-    y,
-    test_size=0.2,
-    random_state=42
-)
+            st.pyplot(fig3)
 
-model = LinearRegression()
+            # Heatmap
+            st.subheader("Correlation Heatmap")
 
-model.fit(X_train, y_train)
+            numeric_columns = sales_data.select_dtypes(
+                include='number'
+            )
 
-y_pred = model.predict(X_test)
+            fig4, ax4 = plt.subplots(figsize=(8,5))
 
-accuracy = r2_score(y_test, y_pred)
+            sns.heatmap(
+                numeric_columns.corr(),
+                annot=True,
+                cmap='coolwarm',
+                ax=ax4
+            )
 
-st.success(
-    f"Model Accuracy (R² Score): {accuracy:.2f}"
-)
+            st.pyplot(fig4)
 
-# --------------------------------
-# Prediction Graph
-# --------------------------------
-st.subheader("Actual Sales vs Predicted Sales")
+        # ---------------------------------------------------
+        # PREDICTION PAGE
+        # ---------------------------------------------------
+        elif menu == "Prediction":
 
-fig4, ax4 = plt.subplots(figsize=(8,5))
+            st.header("Sales Prediction Using Machine Learning")
 
-ax4.scatter(
-    y_test,
-    y_pred
-)
+            X = sales_data[['Quantity', 'Price']]
 
-plt.xlabel("Actual Sales")
+            y = sales_data['Total_Sales']
 
-plt.ylabel("Predicted Sales")
+            X_train, X_test, y_train, y_test = train_test_split(
+                X,
+                y,
+                test_size=0.2,
+                random_state=42
+            )
 
-st.pyplot(fig4)
+            model = LinearRegression()
 
-# --------------------------------
-# Churn Analysis
-# --------------------------------
-st.subheader("Customer Churn Analysis")
+            model.fit(X_train, y_train)
 
-fig5, ax5 = plt.subplots(figsize=(8,5))
+            y_pred = model.predict(X_test)
 
-sns.countplot(
-    x='Churn',
-    data=customer_data,
-    ax=ax5
-)
+            accuracy = r2_score(
+                y_test,
+                y_pred
+            )
 
-st.pyplot(fig5)
+            st.success(
+                f"Model Accuracy (R² Score): {accuracy:.2f}"
+            )
 
-# --------------------------------
-# Churn Percentage
-# --------------------------------
-st.subheader("Churn Percentage")
+            # Prediction Graph
+            st.subheader("Actual vs Predicted Sales")
 
-churn_count = customer_data[
-    'Churn'
-].value_counts()
+            fig5, ax5 = plt.subplots(figsize=(8,5))
 
-fig6, ax6 = plt.subplots(figsize=(7,7))
+            ax5.scatter(
+                y_test,
+                y_pred
+            )
 
-ax6.pie(
-    churn_count,
-    labels=['No Churn', 'Churn'],
-    autopct='%1.1f%%'
-)
+            plt.xlabel("Actual Sales")
 
-st.pyplot(fig6)
+            plt.ylabel("Predicted Sales")
 
-# --------------------------------
-# Business Insights
-# --------------------------------
-st.subheader("Business Insights")
+            st.pyplot(fig5)
 
-highest_sales_region = sales_data.groupby(
-    'Region'
-)['Total_Sales'].sum().idxmax()
+        # ---------------------------------------------------
+        # CHURN ANALYSIS PAGE
+        # ---------------------------------------------------
+        elif menu == "Churn Analysis":
 
-st.info(
-    f"Highest sales were generated from the {highest_sales_region} region."
-)
+            st.header("Customer Churn Analysis")
 
-# --------------------------------
-# Download Report
-# --------------------------------
-st.subheader("Download Sales Report")
+            # Churn Count
+            fig6, ax6 = plt.subplots(figsize=(8,5))
 
-csv = filtered_data.to_csv(
-    index=False
-)
+            sns.countplot(
+                x='Churn',
+                data=customer_data,
+                ax=ax6
+            )
 
-st.download_button(
-    label="Download CSV Report",
-    data=csv,
-    file_name='sales_report.csv',
-    mime='text/csv'
-)
+            st.pyplot(fig6)
 
-# --------------------------------
-# Footer
-# --------------------------------
-st.markdown("---")
+            # Churn Percentage
+            st.subheader("Churn Percentage")
 
-st.write(
-    "Project Developed Using Python, Machine Learning and Streamlit"
-)
+            churn_count = customer_data[
+                'Churn'
+            ].value_counts()
 
-st.write(
-    "Developed by Pranali Babar"
-)
+            fig7, ax7 = plt.subplots(figsize=(7,7))
+
+            ax7.pie(
+                churn_count,
+                labels=['No Churn', 'Churn'],
+                autopct='%1.1f%%'
+            )
+
+            st.pyplot(fig7)
+
+        # ---------------------------------------------------
+        # REPORTS PAGE
+        # ---------------------------------------------------
+        elif menu == "Reports":
+
+            st.header("Download Reports")
+
+            csv = filtered_data.to_csv(
+                index=False
+            )
+
+            st.download_button(
+                label="Download CSV Report",
+                data=csv,
+                file_name='sales_report.csv',
+                mime='text/csv'
+            )
+
+            st.subheader("Business Insights")
+
+            highest_sales_region = sales_data.groupby(
+                'Region'
+            )['Total_Sales'].sum().idxmax()
+
+            st.info(
+                f"Highest sales were generated from the {highest_sales_region} region."
+            )
+
+        # ---------------------------------------------------
+        # FOOTER
+        # ---------------------------------------------------
+        st.markdown("---")
+
+        st.write(
+            "Project Developed Using Python, Machine Learning and Streamlit"
+        )
+
+        st.write(
+            "Developed by Pranali Babar"
+        )
+
+    else:
+
+        st.error("Invalid Username or Password")
