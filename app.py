@@ -26,11 +26,11 @@ st.write("MCA Final Year Major Project")
 # Load Data
 # --------------------------------
 sales_data = pd.read_csv(
-    r"D:\Final Project\Dataset\sales_data.csv"
+    "sales_data.csv"
 )
 
 customer_data = pd.read_csv(
-    r"D:\Final Project\Dataset\customer_data.csv"
+    "customer_data.csv"
 )
 
 # --------------------------------
