@@ -25,7 +25,8 @@ st.subheader("Login Page")
 # Dummy Users
 users = {
     "admin": "admin123",
-    "user": "user123"
+    "user": "user123",
+    "Pranali": "pranali"
 }
 
 username = st.text_input("Enter Username")
@@ -34,6 +35,7 @@ password = st.text_input(
     "Enter Password",
     type="password"
 )
+username = username.lower()
 
 login_button = st.button("Login")
 
